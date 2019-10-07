@@ -16,48 +16,26 @@
 1. jupyter notebook:
 	
 	* 3D plot of given value (e.g. Max Daily Temp, Precipitation Amount) over a range of years plotted on a daily basis
-2. Web:
+	* __STATUS: Done__.  [Conclusion](Initial_Exploration.md) is that the yearly variation for e.g. _Tmax_ for a given day is quite a bit larger than any trend across years.  So we need to be able to both visualize trends and regressions/statistical analyses of the data in section 2 below
+2. App:
 	* Enter value of interest, date range
 	* Generate user interactive plot
 
+### App Architecture
+Further examination of the GHCND data using `database_setup.ipynb` shows the following:
 
-## Initial Data Exploration
-#### Setup
-Since we are more interested in the historical data here we only need access to the latest data on a less frequent (e.g. weekly) basis.  So rather than access the NCEI server that hosts the GHCND for each request we can use the archived data.
+* 114789 unique stations
+* 421 unique 3 letter station prefixes
+* 109648 of the stations are represented in just 20 station prefixes
+* Just focusing on __USC__ stations gives 22480 stations
+	* At 100 years of data per station that's 100 x 365 x 22480 = ~820 million rows of data.  Doable for a single table but perhaps not the best idea for the proof of concept app
 
-The data comes as a biggish (~10GB) tar.gz file consisting of a single directory with each climate observing station as a subdirectory.  The stations are coded as per the 'Station abbreviations' link above.
+As an alternative for a prototype visualization a couple of approaches could be taken:
 
-* Download and move the 3 Data Source files from the above links to a `data` directory
-* `$ tar -ztvf <path_to_data_archive_file>/daily-summaries-latest.tar.gz > daily-summaries-directory.txt` to see what's in the data archive file
-*   Explore station contents using jupyter-notebook and pandas.  My notebook is called:
+1. Focus on data from a list of cities, such as [Natural Earth Cities](http://www.naturalearthdata.com/downloads/10m-cultural-vectors/)
+    * Then use an algorithm (or perhaps just pick the largest file) to select a data station for a given city within a certain radius of that city
+2. Only focus on a region of interest that is smaller than the full US (e.g. California)
 
-	`Initial_exploration.ipynb`
-	
-	and I used Docker scipy-notebook image `1386e2046833` [here](https://hub.docker.com/r/jupyter/scipy-notebook/tags/), launched from this repo's root directory with:
-	
-	`docker run -p 8888:8888 -v "$PWD":/home/jovyan/work jupyter/scipy-notebook:1386e2046833`
-	
-	but you can use any Jupyter notebook configuration (e.g. local Ananconda) you chose
-	
-#### Results
-
-Doing some exploration using data from two Palo Alto, California stations (__USC00046642__ and __USC00046646__) it is apparent from visual inspection that the yearly variation for e.g. _Tmax_ for a given day is quite a bit larger than any trend across years:
-
-![Palo Alto Tmax 1922-1953](https://user-images.githubusercontent.com/11878358/66169937-f19fad80-e5f6-11e9-81c5-bd572865de73.png)
-
-Looking specfically at _Tmin_ for 3 days (Jan 1, Feb 1, and March 1):
-
-![Palo Alto 3 day Tmin 1954-2017](https://user-images.githubusercontent.com/11878358/66171193-25c99d00-e5fc-11e9-893f-597a88c06a2e.png)
-
-A linear regression using seaborn's [regpplot](https://seaborn.pydata.org/tutorial/regression.html) shows a small trend in the data for the above 3 days over 63 years:
-
-![Palo Alto 3 day Tmin 1954-2017 regression](https://user-images.githubusercontent.com/11878358/66172101-71ca1100-e5ff-11e9-9fe4-18a7feaec0ec.png)
-
-#### Next Steps
-Based on the above analysis it would be nice to have the ability to easily vary and visualize the:
-
-* station
-* day or days of the year being examined
-* quantity of interest (e.g. _Tmin_, _Tmax_, etc)
-
-A statistical analysis of the resulting data in terms of trends would also be quite useful
+### Next Steps
+* [ ] Build a GIS database using e.g. PostGIS to allow easy spatial queries of the _Stations_ data
+* [ ] Using the database, select a subset of U.S. stations and load those daily data into new tables in the database
